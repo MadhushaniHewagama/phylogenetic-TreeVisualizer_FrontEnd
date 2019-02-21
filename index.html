@@ -1,0 +1,1360 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+      <title>Phylogenetic Tree Visualizer</title>
+	  <meta name="description" content="Topographic Pyhlomap">
+      <meta name="author" content="M. Hewagama">
+      
+
+	  <!-- Style Sheets -->
+      <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>	
+      <style>
+		#phylogram {
+			overflow:hidden;
+		    border-style: solid;
+		    border-width: 1px;
+		    border-color: rgb(243, 10, 231);
+		}
+
+		#radialPhylogram {
+			overflow:hidden;
+		    border-style: solid;
+		    border-width: 1px;
+		    border-color: rgb(243, 10, 231);
+		}
+
+		#topographicMap {
+			overflow:hidden;
+			border-style: solid;
+			border-width: 1px;
+			border-color:  rgb(243, 10, 231);
+			background-color: white;
+		}
+
+		#topoMapContainer.fullscreen{
+		    z-index: 20; 
+		    width: 95%; 
+		    height: 95%; 
+		    position: absolute; 
+		    top: 2.5%; 
+		    left: 2.5%;
+		    background-color:white; 
+		 }
+
+		#topographicMapOptionsUnderBar {
+			margin-top: 5px;
+		}
+
+		.purple {
+			background-color: rgb(243, 10, 231)!important;
+		}
+		.purple-text {
+			color:  rgb(243, 10, 231)!important;
+		}
+		a:hover {
+			color: rgb(243, 10, 231);
+		}
+		.footerLink {
+			color:  rgb(243, 10, 231);
+		}
+		#svgLabels {
+			display:block;
+		}
+
+
+		/* Materialize.css overrides */
+
+		a {
+			color: rgb(243, 10, 231);
+		}
+		textarea.materialize-textarea:focus:not([readonly]) {
+			border-bottom: 1px solid  rgb(243, 10, 231);
+			box-shadow: 0 1px 0 0  rgb(243, 10, 231);
+		}
+
+		textarea.materialize-textarea:focus:not([readonly])+label {
+			color: rgb(243, 10, 231);
+		}
+
+		input[type=range]+.thumb {
+			background-color:  rgb(243, 10, 231);
+		}
+
+		ul.browser-default li {
+		  list-style-type: initial;
+		  margin-left:17px;
+		}
+		
+		h4 {
+			margin-top:15px;
+		}
+		.progress {background-color:rgb(22, 21, 21);}
+		.progress .determinate { background-color: rgb(243, 10, 231); }
+
+		/* Material icons */
+		/* fallback */
+		@font-face {
+		  font-family: 'Material Icons';
+		  font-style: normal;
+		  font-weight: 400;
+		  src: local('Material Icons'), local('MaterialIcons-Regular'), url('fonts/material-design-icons.woff2') format('woff2');
+		}
+
+		.material-icons {
+		  font-family: 'Material Icons';
+		  font-weight: normal;
+		  font-style: normal;
+		  font-size: 30px;
+		  line-height: 1;
+		  letter-spacing: normal;
+		  text-transform: none;
+		  display: inline-block;
+		  white-space: nowrap;
+		  word-wrap: normal;
+		  direction: ltr;
+		  -webkit-font-feature-settings: 'liga';
+		  -webkit-font-smoothing: antialiased;
+		}		
+
+		.btn i, .btn-large i, .btn-floating i, .btn-large i, .btn-flat i {
+			font-size:30px;
+		}
+
+      </style>
+</head>
+<body>
+
+	  <!-- Navigation Bar -->
+	  <nav class="grey darken-3" role="navigation">
+	    <div class="nav-wrapper container"><span id="logo-container" href="#" class="brand-logo"><a href="http://bar.utoronto.ca"><img src="images/BAR.png" style="vertical-align:top; margin-right: 10px"></a>Topo-phylogeny</span>
+	      <ul class="right hide-on-med-and-down">
+	        <li id="showNewickDataModalButton" style="display:none;"><a href="#showNewickDataModal" class="modal-trigger">Show Newick File</a></li>
+	        <li><a href="#aboutModal" class="modal-trigger">About</a></li>
+	        <li><a href="#optionsModal" class="modal-trigger">Options</a></li>
+	        <li><a href="#tipsModal" class="modal-trigger">Tips</a></li>
+	        <li><a href="#sourceCodeModal" class="modal-trigger">Source Code</a></li>
+	      </ul>
+
+	      <ul id="nav-mobile" class="side-nav">
+	        <li><a href="#aboutModal"  class="modal-trigger">About</a></li>
+	        <li><a href="#optionsModal" class="modal-trigger">Options</a></li>
+	        <li><a href="#tipsModal" class="modal-trigger">Tips</a></li>
+	        <li><a href="#sourceCodeModal" class="modal-trigger">Source Code</a></li>
+	      </ul>
+	    </div>
+	  </nav>
+	  <div class="no-pad-bot" id="index-banner">
+
+	  	<!-- Welcome Page -->
+	    <div class="container" id="welcomePage">
+	      <h1 class="header center green-text">Visualize phylogenetic trees as topographic maps.</h1>
+	      <div class="row center">
+	        <h5 class="header col s12 light">Paste a <a href="https://en.wikipedia.org/wiki/Newick_format" target="_blank">Newick</a> file here:</h5>
+	      </div>
+
+		  <!-- Text Input Box -->
+	      <div class="input-field col s12">
+	        <textarea id="newickInputBox" class="materialize-textarea"></textarea>
+	        <label for="newickInputBox">Newick format: (A:0.1,B:0.2,(C:0.3,D:0.4):0.5);</label>
+	      </div>
+		  
+		  <!-- Example Buttons -->
+		  <div class="row center">
+		    <div class="col s12">
+			  <a class="waves-effect waves-teal btn-flat" onclick="parseNewick('(A:0.1,B:0.2,(C:0.3,D:0.4):0.5);');">Small Example</a>
+			  <a class="waves-effect waves-teal btn-flat" onclick="parseNewick('(((((((PgyBR1:0.00000000,PgyUnB647:0.00000000):0.00200757,(PphNPS3121:0.00249128,Pph1448A:0.00000777):0.00200742):0.01011522,Pla107:0.01575971):0.00210573,PmpFTRS_U7:0.01531036):0.01407924,(PsCit7:0.01991495,(PpiR6a:0.01460829,PsyB728Aa:0.01029085):0.00987315):0.00999897):0.01106542,(PorI_6:0.00661882,Por36_1:0.00498403):0.04567256):0.00045234,((Pci0788_9:0.01761425,PmaES4326:0.01835073):0.02736604,(PavBPIC631:0.01291588,(PmaAZ85297:0.00624748,PtoDC3000a:0.00127089):0.00795115):0.03008747):0.00702695);');">Medium Example</a>
+			  <a class="waves-effect waves-teal btn-flat" onclick="parseNewick('((((((((((((((PpiH5E3:0.00000000,PpiPP1:0.00000000):0.00252001,PjaM301072:0.00250147):0.00175506,PsyFTRS_W7:0.00478703):0.00136880,((PsyL177:0.00094777,PsyLOB2_1:0.00155361):0.00125163,(PsyNCPPB28:0.00157612,Ptt601:0.00142503):0.00025659):0.00306145):0.00117244,(PafDSM5025:0.00253646,PsyB64:0.00046616):0.00535781):0.00108752,(PttDSM5022:0.00216384,(Pla1188_1:0.00350490,PsyFF5:0.00202032):0.00085104):0.00434776):0.00121404,PsyPSC1B:0.00695052):0.00418387,(((Pph1449B:0.00052915,PpiH5E1:0.00000000):0.00015648,PpiH6E5:0.00034330):0.00009728,(PpiH7E7:0.00224179,(Ppi895A:0.00104197,PpiR6a:0.00000000):0.00025970):0.00040414):0.01040471):0.00229716,(PsyB728A:0.00346345,(PacA10853:0.00573777,PsyB48:0.00382224):0.00232490):0.00707697):0.00306205,PsTLP2:0.01391976):0.01140230,(PbrKOZ8101:0.00489171,(((PsyB76:0.00133766,PsyFTRS_W6:0.00216550):0.00064305,PttG733:0.00287428):0.00053771,(Pto2170:0.00214782,((PsCit7:0.00110098,Psy61:0.00190137):0.00016567,(Psy1212R:0.00090776,PsyA2:0.00059189):0.00033488):0.00035829):0.00119777):0.00835688):0.01295012):0.00696647,(PseHC_1:0.01350894,((((PmyAZ84488:0.00157905,PmyM302941:0.00394590):0.01041164,PmpFTRS_U7:0.00558250):0.00235982,Pae0893_23:0.00268274):0.00688288,(((((PlaYM7902:0.00000000,PlaYM8003:0.00000000):0.00000000,PlaN7512:0.00000000):0.00006054,Pla107:0.00043889):0.01178224,Pta6606:0.00341261):0.00384490,(PmeN6801:0.00634047,(Psv4352:0.01007126,(PmoM301020:0.00677841,((((((((PgyKN127:0.00024967,PgyM301765:0.00024966):0.00025011,PgyMOC601:0.00049978):0.00000000,(PgyKN166:0.00000000,PgyKN44:0.00150139):0.00000065):0.00000004,(PgyBR1:0.00000000,PgyLN10:0.00150056):0.00000051):0.00000128,PgyKN28:0.00000000):0.00000181,PgyR4a:0.00000000):0.00000310,PgyUnB647:0.00000000):0.00282068,(PphHB10Y:0.00048952,(PphKN86:0.00049597,(((Pph1302A:0.00300675,PphSG44:0.00000000):0.00000042,PphR6a:0.00000000):0.00050108,(Pph1448A:0.00000000,(PphNPS3121:0.00250491,(PphNS368:0.00000000,(PmaKN91:0.00200864,PphY5_2:0.00000000):0.00000430):0.00000088):0.00000123):0.00000173):0.00000362):0.00000964):0.00119222):0.00581542):0.00025263):0.00076519):0.00283499):0.00194067):0.00373467):0.01045826):0.01147017,(PsyPs9220:0.00405211,(Pcn3113:0.00474346,(Por36_1:0.00465723,(PcnKN221:0.00077548,PorI_6:0.00475446):0.00139768):0.00182070):0.00148520):0.04254466):0.00126574,((((PmaM4:0.00052970,PmaYM7930:0.00046966):0.00028499,PmaES4326:0.00021460):0.01763003,Pci0788_9:0.01841336):0.02710447,(((PanFTRS_L1:0.00172820,PthK93001:0.00429172):0.00465630,Pmp19322:0.01108162):0.00505493,((PtoDC3000:0.00111504,PtoKN10:0.00088469):0.00112282,(Pap1089_5:0.00604028,((((((PtoDCT6D1:0.00045759,PtoTF1:0.00104249):0.00002442,PtoDC89_4H:0.00097649):0.00046287,Pto1318:0.00003607):0.00026407,Pto487:0.00073643):0.00124927,(PtoDC84_1:0.00000000,PtoPT23:0.00054641):0.00175799):0.00153690,(PmaM6:0.00269314,((PlaA7386:0.00280650,PmaKN84:0.00271566):0.00146598,(Pma4981:0.00000000,(PmaAZ85297:0.00000000,(PmaH7311:0.00000000,(PmaH7608:0.00054723,PmaKN203:0.00000000):0.00002418):0.00001223):0.00000619):0.00255075):0.00107481):0.00096809):0.00178078):0.00097707):0.00922906):0.02843149):0.00653465);');">Large Example</a>
+			</div>
+		  </div>
+
+		  <!-- Submit button -->
+	      <div class="row center">
+	        <a class="btn-large waves-effect waves-light white-text green" style="width:180px" onclick="parseNewick($('#newickInputBox').val());">Submit</a>
+	      </div>
+
+		  <!-- Upload File button -->		
+	      <div class="row center" style="margin-top:30px">
+	          <h5 class="header col s12 light">Or upload a Newick file:</h5>
+		      <div class="row center" >
+		        <a class="btn-large waves-effect waves-light white-text green" style="width:180px;margin-top:10px" onclick="uploadNewickFile()">Select File</a>
+		      </div>
+	      </div>
+
+	    <!-- An empty div that we access later to determine the column width -->
+	    </div>
+		<div class="row">
+			<div class="col s6 center" id="col1"></div>
+			<div class="col s6 center" id="col2"></div>
+		</div>
+
+
+	  </div>
+
+	  <!-- Loading Gif -->
+	  <div class="container">
+	    <div class="" id="loadingGif" style="display:none;">
+	      <div class="row center">
+			<img src="images/hex-loader2.gif" class="loadingGif">
+		  </div>
+      	 </div>
+      </div>
+
+
+	  <!-- Output Page -->
+	  <div class="">
+	    <div class="" id="outputPage" style="display:none;">
+		  <a class="left waves-effect waves-teal btn-flat grey-text" style="position:absolute;left:50px;" onclick="location.reload();">Go Back</a>
+	      <div class="row center">
+			    <div class="row">
+			    </div>
+
+		      	<!-- Phylogenetic Tree (LEFT) Column -->
+				<div class="col s6 center">
+					<h4>Phylogenetic Tree</h4>
+					<!-- Switch to Radial Phylogram button --> 
+			    	<a id="radialPhylogramButton" style="display:inline" class="center waves-effect waves-teal btn-flat grey-text" onclick="switchToRadialPhylogram()">Switch to Radial</a>
+					<!-- Switch back to regular Phylogram button --> 
+			    	<a id="treePhylogramButton" style="display:none;" class="center waves-effect waves-teal btn-flat grey-text" onclick="switchToTreePhylogram()">Switch to Tree</a>	
+
+			    	<!-- Save Image button --> 
+			    	<a id="savePhylotreeButton" class="center waves-effect waves-teal btn-flat grey-text modal-trigger"  href="#saveImageModal" onclick="if( $('#radialPhylogram').css('display') == 'block'){saveImageType='#svgRadialTree'; $('#saveImageType').text('Radial Tree')} else { saveImageType='#svgPhyloTree'; $('#saveImageType').text('Phylogenetic Tree')}">Save</a>
+
+			    	<!-- Insert phylogenetic treen and radial phylogram here -->
+				    <div class="row center">
+						<div id="phylogram" style="margin-left:10%;"></div>
+						<div id="radialPhylogram" style="margin-left:10%;display:none;"></div>
+
+					</div>				
+				</div>
+			
+				<!-- Topographic Map (RIGHT) Column -->
+				<div class="col s6 center" id="topoMapContainer">
+					<h4 id="topographicMapSectionLabel">Topographic Map</h4>
+					<!-- pause force layout button --> 
+			    	<a id="pauseButton" class="center waves-effect waves-teal btn-flat grey-text" onclick="pauseForceLayout();">Pause</a>
+			    	<a id="restartButton" style="display:none;" class="center waves-effect waves-teal btn-flat grey-text" onclick="restartForceLayout();">Restart</a>
+
+			    	<!-- hide links button --> 
+			    	<a id="hideLinksButton" class="center waves-effect waves-teal btn-flat grey-text" onclick="hideLinks();">Hide Links</a>
+			    	<a id="showLinksButton" style="display:none;" class="center waves-effect waves-teal btn-flat grey-text" onclick="showLinks();">Show Links</a>
+
+			    	<!-- hide / show links buttons --> 
+			    	<a id="hideLabelsButton" class="center waves-effect waves-teal btn-flat grey-text" onclick="hideLabels();">Hide Labels</a>
+			    	<a id="showLabelsButton" style="display:none;" class="center waves-effect waves-teal btn-flat grey-text" onclick="showLabels();">Show Labels</a>
+
+			    	<!-- Reset Topo Map button --> 
+			    	<a id="resetMapButton" class="center waves-effect waves-teal btn-flat grey-text" onclick="resetTopoMap();">Reset</a>
+
+			    	<!-- Save Image button --> 
+			    	<a id="saveTopoMapButton" class="center waves-effect waves-teal btn-flat grey-text modal-trigger"  href="#saveImageModal" onclick="saveImageType='#svgTopoMap'; $('#saveImageType').text('Topographic Map');">Save</a>
+
+					<!-- map section-->
+				    <div class="row center">
+						<!-- Center on screen button -->
+						<a id="centerMap" class="waves-effect waves-teal btn-flat grey-text" style="position:absolute;right:230px;font-size:30px!important;" onclick="centerCanvas()"><i class="material-icons">settings_overscan</i></a>
+						<a id="zoomOut" class="waves-effect waves-teal btn-flat grey-text" style="position:absolute;right:100px;font-size:30px!important;" onclick="zoomOut()"><i class="material-icons">zoom_out</i></a>
+
+
+
+
+						<!-- Zoom in / out buttons -->
+						<a id="zoomIn" class="waves-effect waves-teal btn-flat grey-text" style="position:absolute;right:160px;font-size:30px!important;" onclick="zoomIn()"><i class="material-icons">zoom_in</i></a>
+						<a id="zoomOut" class="waves-effect waves-teal btn-flat grey-text" style="position:absolute;right:100px;font-size:30px!important;" onclick="zoomOut()"><i class="material-icons">zoom_out</i></a>
+
+						<!-- Full Screen button-->
+						<a id="fullScreenButton" class="waves-effect waves-teal btn-flat grey-text" style="position:absolute;right:40px;" onclick="makeTopomapFullScreen()"><i class="material-icons">aspect_ratio</i></a>
+						<a id="regularViewButton" class="waves-effect waves-teal btn-flat grey-text" style="position:absolute;right:15px;display:none;" onclick="makeTopomapRegularView()""><i class="material-icons">picture_in_picture</i></a>
+
+						<!-- Topographic Map gets inserted here-->
+						<div id="topographicMap"></div>
+
+						<!-- "Calculating Positions message -->
+						<div id="calculatingPositionsMessage" class="row center" style="display:block;width:80%">
+							<p class="row center">Percent of nodes that have stopped moving: <span id="progressBarValue"</span></p>
+						</div>
+
+						<!-- Under map options bar -->
+						<div id="topographicMapOptionsUnderBar">
+							<table>
+								<tr>
+									<td style="width:150px;padding-right:15px">
+									  <!-- Select a Node Dropdown combobox (options get filled in later) -->
+									  <select class="browser-default" id="topographicMapSelectNode" style="margin-top:-7px;">
+										<option value="" selected>Select a node:</option>
+									  </select>
+
+									</td>
+									<td>
+									    <!-- Depth Legend (contents gets filled in later) -->
+										<span id="topographicMapLegend" class="left-align"></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+			    </div>	      
+		  	</div>
+      	 </div>
+      </div>
+  </div>
+
+  <!-- Status Notices go here -->
+  <div id="statusUpdate"> 
+
+  </div>
+  <!-- Modal Popup Windows go here -->
+  <!-- Show Newick Data Modal -->
+  <div id="showNewickDataModal" class="modal">
+    <div class="modal-content">
+		<h4>Newick Data</h4>
+		<div id="newickData" class="row" style="overflow-wrap: break-word;">	        
+		</div>
+	    <div class="modal-footer">
+	      <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+	    </div>
+	</div>
+  </div>
+    
+  <!-- Source Code Modal -->
+  <div id="sourceCodeModal" class="modal">
+    <div class="modal-content">
+		<h4>Source Code</h4>
+		<p>Topo-phylogeny source code can be downloaded here. It is available for use or modification under the <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html" target="_blank">GNU General Public License, version 2</a>.</p>
+		<div class="row center">
+			<a href="Topo-phylogeny.zip" class="waves-effect waves-light btn green">Download</a>
+		</div>
+	    <div class="modal-footer">
+	      <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+	    </div>
+	</div>
+  </div>
+
+  <!-- Save Image Modal -->
+  <div id="saveImageModal" class="modal">
+    <div class="modal-content">
+		<h4>Save Image - <span id="saveImageType"></span></h4>
+		<div class="row center" >
+	        <a id="savePNGbutton" class="btn-large waves-effect waves-light white-text green" style="width:180px;margin-top:30px;margin-right:20px;" onclick="saveImage(saveImageType,'png');">Save PNG</a>
+	  		<a id="saveSVGbutton" class="btn-large waves-effect waves-light white-text green" style="width:180px;margin-top:30px;margin-left:20px;" onclick="saveImage(saveImageType,'svg');">Save SVG</a>        
+	      </div>
+	    </div>
+		<!-- hidden divs that contain the image data -->
+	    <div style="display:none;">
+			<div id="svgdataurl"></div>
+			<div id="pngdataurl" ></div>
+			<canvas id="#canvas" width="1000" height="1000"></canvas>
+		</div>
+
+	    <div class="modal-footer">
+	      <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+	    </div>
+	</div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="modal">
+    <div class="modal-content">
+      <h4>What is this?</h4>
+      <p>Topo-phylogeny is an alternative approach to displaying phylogenetic relationships. It visualizes each node of a tree as a point on a two-dimensional map, with the placement, surrounding color and distance from other nodes determined by its attraction to parent and sister nodes, branch length, and hierarchical level. Topographic contour shapes indicate which level related nodes are connected at. Gaps between clusters indicate clades from a different lineage.</p>
+      <img src="images/sampleImage.png" style="width:100%">
+      <h4>How does it work?</h4>
+      <p>Begin by pasting the contents of a Newick file into the input box, or load a file from your hard drive by clicking the 'Select File' button. The Newick file gets parsed with <a href="https://github.com/jasondavies/newick.js" target="_blank">Newick.js</a> by Jason Davies and converted into a JSON object. This object is passed into <a href="https://gist.github.com/adnils/8710341" target="_blank">d3.phylogram.js</a> by Ken-ichi Ueda to build the phylogenetic tree and radial dendogram visible on the left side of the page.</p>
+      <p>On the right side of the page, the Topo-phylogeny is created as an SVG image. Each node consists of a stack of circles, with the top circle in the stack containing the label and each circle below it sized and coloured according to its distance from the root and the cumulative branch length. The nodes determine their positions according to three basic principles:</p>
+      <p><ul class="browser-default">
+      	<li>Internal nodes are initially assigned "home" positions based on a radial dendogram algorithm. This helps spread everything out so clades don't get crossed.</li>
+      	<li>A force layout function updates the node positions until they find their "optimal" position and stop moving. All nodes are attracted to their parents, sisters and nieces. Internal nodes are also attracted to their "home" positions and children.</li>
+      	<li>Leaf nodes repel from other nodes based on a distance determined by the radius of the circle that represents their common ancestor level. Thus, nodes that are only related at the root repel each other at a distance based on the radius of their lowest (and biggest) circle, while sister nodes repel each other at a distance based on their highest (and smallest) circle.</li>
+      <ul></p>
+      <p>Circles are drawn to the screen according to their hierarchical level (see diagram below), so when nodes come together their stack of circles interleave with one another. This ensures that higher level circles don't get covered by lower level circles. A combination of SVG blur and sharpen filters (collectively known as the <a href="https://css-tricks.com/gooey-effect/" target="_blank">"goo"</a> effect) blends circles from the same level together, creating the perception of a single combined shape. This helps create the topographic map effect.</p>
+      <img src="images/StackOfCircles.png" style="width:100%">
+      <p>This tool was written by <a href="http://www.waese.com">Jamie Waese</a> with support from <a href="http://www.eeb.utoronto.ca/people/d-faculty/Guttman.htm">David Guttman</a> and <a href="http://csb.utoronto.ca/faculty/nicholas-provart/">Nicholas J. Provart</a> at the University of Toronto. It uses a combination of <a href="https://d3js.org/">D3.js</a>, <a href="https://jquery.com/">jQuery</a> and <a href="http://materializecss.com/">Materialize.css</a> 
+
+      <h4>Some background information</h4>
+      <p>This visualization paradigm is similar to Max Fürbringer's "Phylogenetic Tree of Birds" diagram, which shows groups of related items on slices of a hierarchical tree. This was published in 1888 in <i>Untersuchungen zur Morphologie und Systematik der Vögel</i>.</p>
+      <img src="images/Furbringer.gif" style="width:100%">
+      <p>This image was published in Isabel Meirelles' <a href="https://www.amazon.com/Design-Information-Introduction-Histories-Visualizations/dp/1592538061?ie=UTF8&utoken=406888.41555.1c02357fd33ef743c633c94f3909729d">Design for Information: An Introduction to the Histories, Theories, and Best Practices Behind Effective Information Visualizations</a>. The digital scan was accessed from <a href="http://phylonetworks.blogspot.co.il/2014_03_01_archive.html">The Genealogical World of Phylogenetic Networks</a> blog.</p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
+
+  <!-- Options Modal -->
+  <div id="optionsModal" class="modal">
+    <div class="modal-content">
+		<h4>Options</h4>
+		<ul class="collection">
+			<li class="collection-item">
+				<h5>Pause Screen Refresh</h5>
+				<p>If there are many nodes and performance is slow, you may wish to temporarily pause the screen refresh function. The nodes will continue to adjust their positions background. Wait a few minutes and then un-pause the screen.</p>
+				<!-- turn off goo / turn on goo  buttons -->
+		    	<a id="pauseScreenRefreshButton" class="center waves-effect waves-teal btn-flat grey-text" onclick="$('#pauseScreenRefreshButton').hide();$('#unPauseScreenRefreshButton').show();$('#pauseProgressBar').show();pauseScreenRefresh=true;">Pause Screen Refresh</a>
+		    	<a id="unPauseScreenRefreshButton" style="display:none;" class="center waves-effect waves-teal btn-flat grey-text" onclick="$('#unPauseScreenRefreshButton').hide();pauseScreenRefresh=false;$('#pauseScreenRefreshButton').show();$('#pauseProgressBar').hide();">Un-Pause Screen Refresh</a>
+				<div id="pauseProgressBar" style="display:none">
+			    	<br>
+			    	<div class="progress">
+					   <div class="indeterminate"></div>
+					</div>
+				</div>
+			</li>
+			<li class="collection-item">
+				<h5>SVG effects</h5>
+				<p>The SVG "goo" effect may reduce performance if you have more than a hundred nodes. You may wish to turn it off until the nodes have stopped moving.</p>
+				<!-- turn off goo / turn on goo  buttons -->
+		    	<a id="turnOffGooButton" class="center waves-effect waves-teal btn-flat grey-text" onclick="turnOffSvgGoo();">Turn off "goo" effect</a>
+		    	<a id="turnOnGooButton" style="display:none;" class="center waves-effect waves-teal btn-flat grey-text" onclick="turnOnSvgGoo();">Turn on "goo" effect</a>
+		    </li>
+			<li class="collection-item">
+				<h5>Radius Multipler</h5>
+		    	<p>The "tightness" of the layout can be adjusted here. The default setting is 2. Topo-phylogeny charts with more than a hundred nodes should be in the 3-6 range. Charts with more than a thousand nodes should be in the 10-50 range. However, these are just guidelines and you may prefer different settings.
+		    	<!-- number input box -->
+		    	<div class="col s12">
+				  <label>Initial Position Radius Multiplier</label>
+			      <form action="#">
+				    <p class="range-field">
+				      <input type="range" id="radiusMultipler" min="1" max="50" value="2" oninput="radiusMultiplier=parseInt(this.value);setInitialNodePositions(radiusMultiplier);if(	forceLayoutCurrentlyRunning==false) {restartForceLayout()};"/>
+				    </p>
+				  </form>
+				 </div>
+			</li>
+	</div>
+  
+    <div class="modal-footer">
+      <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+	</div>
+  </div>
+
+
+  <!-- Tips Modal -->
+  <div id="tipsModal" class="modal">
+    <div class="modal-content">
+    	<ul class="collection">
+			<li class="collection-item">
+				<h5>Use the mouse wheel</h5>
+				<p>Use the mouse wheel to zoom in and out of the Topo-phylogeny chart.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Drag canvas</h5>
+				<p>You can adjust the canvas position by dragging it up and down or side to side. Make sure to grab the white background and not the nodes.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Customize chart by dragging node elements</h5>
+				<p>Manually adjust node positions by clicking and dragging them wherever you want them to go.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Show links between nodes</h5>
+				<p>Toggle link lines on and off with the "Show Links" button.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Hide labels</h5>
+				<p>If you realy just want a big picture view, you can hide the labels with the "Hide Labels" button.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Click a node to select it</h5>
+				<p>Selecting a node will create a red marker that remains in place, even after you mouse away. Click the node again (or click another node) to deselect it.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Shift click a node to create a second marker</h5>
+				<p>Holding shift while selecting a node will create a green marker that remains in place. Shift click the node again (or shift click another node) to deselect it.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Looking for a specific node?</h5>
+				<p>Use the alphabetized dropdown menu beneath the canvas to find and select the node you're looking for.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Pause and Restart</h5>
+				<p>The force layout function remains active until the nodes find their optimal position and stop moving. You can pause the movement with the "Pause" button, and restart it with the "Restart" button.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Want to redraw the map from scratch?</h5>
+				<p>The "Restart" button resets all the node positions and builds a new Topo-phylogeny chart.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Save a copy of the map</h5>
+				<p>Click the "Save" button to save a PNG or SVG copy of the chart.</p>
+			</li>
+			<li class="collection-item">
+				<h5>Improve performance</h5>
+				<p>From the Options tab, pause the screen refresh function so the nodes can find their optimal positions faster.</p>
+			</li>		
+			<li class="collection-item">
+				<h5>SVG "goo" effects</h5>
+				<p>From the Options tab, toggle SVG "goo" effects on and off to increase performance.</p>
+			</li>					
+			<li class="collection-item">
+				<h5>Adjust "tightness"</h5>
+				<p>From the Options tab, use the slider to adjust the "tightness" of the Topo-phylogeny layout.</p>
+			</li>				
+		</ul>
+
+
+	    <div class="modal-footer">
+	      <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+	    </div>
+	</div>
+  </div>
+
+ 	<!-- Load JavaScript libraries -->
+	<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script> 
+	<script type="text/javascript" src="js/jquery-ui.min.js"></script> 
+	<script type="text/javascript" src="js/materialize.min.js"></script>
+	<script type="text/javascript" src="js/newick.js"></script>
+	<script type="text/javascript" src="js/d3.v3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="js/d3.phylogram.js"></script>
+	<script type="text/javascript" src="js/topophylogeny.js"></script>
+
+
+ 	<!-- Custom Functions -->
+	<script>
+	// ------------------------------------------------------------------
+	// Big thanks to all these sources:
+	// How to apply multiple SVG filters: https://bl.ocks.org/nbremer/077ef487fefcff72a02605422298e2b3
+	// Gooey SVG filter: http://www.visualcinnamon.com/2015/05/gooey-effect.html
+	// Nice explanation of Gooey SVG filter: https://css-tricks.com/gooey-effect/#goo
+	// Materialize CSS framework: http://materializecss.com/color.html
+	// ------------------------------------------------------------------
+
+
+	// initialize modal popup window function
+	$(document).ready(function() {
+	  $('.modal-trigger').leanModal();
+	});
+
+	// make topographic map section scroll with page
+	$(window).scroll(function(){
+		var topMargin = 0;
+		if ($(window).scrollTop() > 100) {
+			topMargin = $(window).scrollTop() - 100;
+		}
+		$("#topoMapContainer").css({"margin-top": topMargin + "px"});
+	});
+
+	// initialize select box from options modal popup
+	$(document).ready(function() {
+	    $('select').material_select();
+	});
+
+	//////// Some global variables
+	var nodes;				// A JSON object that contains all the nodes
+	var nodesArray = [];	// An array that points to the same node objects
+	var saveImageType;
+    var chartWidth = $("#col1").width() - 50;
+    var chartHeight = innerHeight - 275;
+	var phyloTreeHeight = chartHeight;
+	var radiusMultiplier = 2;
+	var svgGooEffect = true;
+
+	// set the window sizes for phylogram, radial phylogram and topographic map
+    $("#topographicMap").width(chartWidth);
+    $("#topographicMap").height(chartHeight);
+    $("#phylogram").height(chartHeight);
+    $("#radialPhylogram").height(chartHeight);
+
+    // resize these things if the browser window resizes
+    window.onresize = function(event) {
+	    chartWidth = $("#col1").width() - 50;
+	    chartHeight = innerHeight - 275;
+		//phyloTreeHeight = chartHeight;
+
+	    $("#topographicMap").width(chartWidth);
+	    $("#topographicMap").height(chartHeight);
+
+	    //$("#phylogram").width(chartWidth);
+	    $("#phylogram").height(phyloTreeHeight);
+	    $("#radialPhylogram").height(chartHeight);
+    };
+
+	function parseNewick(input) {
+		console.log("File received. ");
+		//////// FIRST, CLEAR THE INPUT SCREEN AND SHOW THE LOADING GIF
+		// clear the screen and go to the next function
+ 		$( "#welcomePage" ).fadeOut( "fast", function() {
+    		// Animation complete.
+    		$( "#loadingGif" ).fadeIn( "fast", function() {
+	    		// Animation complete.
+
+			// if input was empty, add a message
+			if (input == "") {
+				$("#loadingGif").hide()
+		 		$( "#welcomePage" ).hide( function() {
+					$("#outputPage").show();
+				});
+				return;
+			}
+
+
+	  		});
+  		});
+
+		//////// THEN BEGIN BY PARSING THE NEWICK FILE
+		nodes = Newick.parse(input);
+
+		console.log("Parsed newick file. ");
+
+
+        /// Recursive function to build an array of nodes based on the object
+		function buildnodesArray(node, callback) {
+          nodesArray.push(node)
+          if (node.branchset) {
+            for (var i=0; i < node.branchset.length; i++) {
+              buildnodesArray(node.branchset[i])
+            }
+          }
+        }
+        buildnodesArray(nodes);
+		console.log("Built nodesArray. ");
+
+
+        //////// GIVE ID NUMBERS TO EACH NODE
+        for (var i = 0; i < nodesArray.length; i++) {
+        	nodesArray[i].id = i;
+        }
+
+        //////// ADD THIS LIST TO THE 'SELECT A NODE' DROPDOWN
+        addSelectNodeDropdownMenuOptions();
+
+		/////// BUILD TREE PHYLOGRAM IN THE PHYLOGRAM DIV 
+		// determine height for the tree first
+		phyloTreeHeight = chartHeight;
+		if (nodesArray.length > chartHeight / 10) {
+			phyloTreeHeight = nodesArray.length * 10;
+		}
+
+   		$("#phylogram").height(phyloTreeHeight);
+
+		// now build it
+		console.log("Building phylogenetic tree. ");
+
+		buildTreePhylogram(nodes);
+		function buildTreePhylogram(input) {
+			d3.phylogram.build("#phylogram", input, {
+				width: chartWidth-200, // leave room for labels
+				height: phyloTreeHeight,
+				skipTicks: true,
+				skipLabels: false
+			});
+		}
+
+		console.log("Done. ");
+		console.log("Building radial phylogram. ");
+
+
+		//////// BUILD THE RADIAL PHYLOGRAM IN A HIDDEN DIV
+		buildRadialPhylogram(nodes);
+		function buildRadialPhylogram(input) {
+			d3.phylogram.buildRadial("#radialPhylogram", input, {
+				width: chartWidth,
+				height: chartHeight,
+				skipTicks: true,
+				skipLabels: false
+			});
+		}
+		$("#svgRadialTree").draggable();
+		console.log("Done. ");
+
+
+		/////// BUILD THE TOPOGRAPHIC MAP
+		console.log("Building topo-phylogeny. ")
+
+		buildTopographicMap(nodes);
+		drawLegend();
+		//hideLinks();
+		console.log("Done. ")
+
+
+		/////// FINALLY MAKE THE OUTPUT SCREEN VISIBLE
+		console.log("Go to ouput screen. ")
+
+		setTimeout(showOutput,750);
+		function showOutput() {
+			// turn off loading gif & make container visible
+			$( "#loadingGif" ).fadeOut( "fast", function() {
+	    		// Animation complete.
+				$("#outputPage").show();
+				$("#settingsPanel").show();
+		 		// add newick data to the newick data modal 
+		 		$("#newickData").text(input);
+		 		$("#showNewickDataModalButton").show();
+
+				// move tooltips away from view
+				$(".selectionMarker").hide();
+				$(".selectionMarker2").hide();
+				$(".d3-tip").hide();
+
+				console.log("Done. ")
+			});
+		}
+	}
+	
+	////// REACT TO MOUSEOVER EVENTS
+	function mouseOverNode(id) {
+		// reset all nodes first
+		for (var i = 0; i < numNodes; i++) {
+			mouseOutNode(i);
+		}
+
+
+		if (id != currentlySelectedTopoNode && id != currentlySelected2TopoNode) {
+			// highlight Topo labels
+			d3.select("#topoLabelBG_"+id).attr("fill","darkgrey");
+
+			// highlight Phylo Nodes
+			d3.select("#phyloNode_"+id).select("circle").attr("r",8);
+			d3.select("#phyloNode_"+id).attr("fill","darkgrey");
+			d3.select("#phyloNode_"+id).style("font-weight","bold");
+		}
+
+		// Trigger tooltip
+		$(".d3-tip").show();
+		if (nodesArray[id].type == "leaf") {
+			document.getElementById('d3-tipText').textContent = nodesArray[id].name;
+		}
+		else {
+			document.getElementById('d3-tipText').textContent = ("node:"+nodesArray[id].id+"  parent:"+nodesArray[id].parent.id+"  depth:"+nodesArray[id].depth);
+		}
+
+		$(".d3-tip").attr("transform","translate("+(nodesArray[id].position.x)+", "+(nodesArray[id].position.y - 80)+
+			")")
+
+		// set width of box according to width of text
+		var textWidth = document.getElementById("d3-tipText").getBBox().width+20;
+		if (textWidth < 50) {
+			textWidth = 50;
+		}
+
+		$("#d3-tipBox").attr("width", textWidth);
+		$("#d3-tipBox").attr("x", -textWidth/2);				
+
+		mouseOverTopoNode = id;
+
+		$("#legendPlate_"+nodesArray[id].depth).css("fill","red");
+	}
+
+function mouseOutNode(id) {
+    // highlight Topo labels
+    if (d3.select("#topoLabelBG_" + id).class == "linkLine") {
+    	d3.select("#topoLabelBG_" + id).attr("fill", "grey");
+        d3.select("#topoLabelBG_" + id).attr("stroke", "grey");
+    } 
+    else {
+        if (id != currentlySelectedTopoNode && id != currentlySelected2TopoNode) {
+            if (nodesArray[id].type == "leaf" ) {
+            	d3.select("#topoLabelBG_" + id).attr("fill", "black");
+            	d3.select("#topoLabelBG_" + id).attr("stroke", "black");
+            }
+            else {
+            	d3.select("#topoLabelBG_" + id).attr("fill", "lightgrey");
+            	d3.select("#topoLabelBG_" + id).attr("stroke", "lightgrey");            	
+            }
+        }
+    }
+
+    // highlight Phylo Nodes
+    if (id != currentlySelectedTopoNode && id != currentlySelected2TopoNode) {
+        if (nodesArray[id].type != "leaf") {
+            d3.select("#phyloNode_" + id).select("circle").attr("r", 2.5);
+        } 
+        else {
+            d3.select("#phyloNode_" + id).select("circle").attr("r", 4.5);
+        }
+
+        d3.select("#phyloNode_" + id).attr("fill", "black");
+        d3.select("#phyloNode_" + id).style("font-weight", "normal");
+    }
+
+    // Hide tooltip
+    $(".d3-tip").hide();
+
+	// clear legend plates
+	for (var i = 1; i <= maxAncestors; i++) {
+		$("#legendPlate_"+i).css("fill",colours(i));
+	}
+}
+
+	//////-------------
+	// Respond to mouseover events on the topographic map lower circles
+	function mouseOverTopoLink(link) {
+		// get the link of the node (ie, the parent ID)
+		var link = d3.select(link).attr("link");
+		// select all topoLink plates
+		var allLinks = d3.selectAll(".topoLink")[0];
+		var changeTheseLinks = [];
+
+		// iterate through, if this link == the link of the node, store it
+		for (var i = 0; i < allLinks.length; i++) {
+			if (d3.select(allLinks[i]).attr("link") == link) {
+				changeTheseLinks.push(allLinks[i]);
+			}
+		}
+
+		/// colour all stored plates  
+		for (var i = 0; i < changeTheseLinks.length; i++) {
+				d3.select(changeTheseLinks[i]).attr("fill","red");
+		}
+
+		// in order to bring the z-index of the selected plates higher we need to remove them and re-append them
+		d3.select(changeTheseLinks[i]).remove();
+		try {
+			d3.select("#svgShapes"+i).append(changeTheseLinks[i]);
+		}
+		catch (e) {
+			// do nothing
+		}
+
+		// highlight equivalent links on the Phylo tree
+		highlightEquivalentPhyloLinks(link);
+	}
+
+	function mouseOutTopoLink(link) {
+		// get the plate height
+		var plate = d3.select(link).attr("plate");
+		var initialColor = d3.select(link).attr("initialColor");
+		// colour all plates of that height's colour
+		for (var i = 0; i < nodesArray.length; i++) {
+			d3.select("#topoNode_"+i+"_"+plate).attr("fill",initialColor);
+		}
+
+		// clear any highlighting of the phylo tree
+		clearEquivalentPhyloLinks();
+	}
+
+	//////-------------
+	// Respond to mousover events on the phylogram links
+	function mouseOverPhyloLink(data) {
+		///// COLOR PHYLO LINKS RED
+		// get the parent
+		var parent = data[0].parent;
+
+		// make an array of all the grandchildren
+		var grandchildren = [parent];
+		storeGrandchildren(parent)
+		function storeGrandchildren(parent) {
+			if (parent.children) {
+				for (var i = 0; i < parent.children.length; i++) {
+					grandchildren.push(parent.children[i]);
+					storeGrandchildren(parent.children[i]);
+				}
+			}
+		}
+
+		// select all links 
+		var allLinks = d3.selectAll(".link")[0];
+
+		// cycle through all the grandchildren and color the links to them red
+		for (var i = 0; i < allLinks.length; i++) {
+			for (var k = 0; k < grandchildren.length; k++) {
+				var thisNodeID = d3.select(allLinks[i]).attr("node");
+				if (thisNodeID == grandchildren[k].id ) {
+					d3.select(allLinks[i]).attr("stroke","red");
+				}
+			}
+		}
+		highlightEquivalentTopoLinks(grandchildren);
+
+	}
+
+	function mouseOutPhyloLink() {
+		/////// COLOR PHYLO LINKS GREY
+		// get all the links
+		var allLinks = d3.selectAll(".link")[0];
+
+		// iterate through them and highlight any branches lower or equal to branchLevel
+		for (var i = 0; i < allLinks.length; i++) {
+			d3.select(allLinks[i]).attr("stroke","#AAAAAA");
+		}
+
+		clearEquivalentTopoLinks();
+	}
+
+
+	//////------------
+	// Trigger the tooltips over the topomap programatically when hovering over phylogram nodes
+	function showTopoTooltip(node) {
+		document.getElementById('d3-tipText').textContent = node.name
+
+		$(".d3-tip").show();		
+			
+		// get width of box according to width of text
+		var textWidth = document.getElementById("d3-tipText").getBBox().width+20;
+		if (textWidth < 50) {
+			textWidth = 50;
+		}
+
+		$("#d3-tipBox").attr("width", textWidth);
+		$("#d3-tipBox").attr("x", -textWidth/2);		
+
+	}
+
+	function hideTopoTooltip() {
+		$(".d3-tip").hide();		
+	}
+
+	//////-------------
+	// hover over phylomap links to highlight equivalent topo links
+	function highlightEquivalentTopoLinks(grandchildren) {
+		var startingDepth = grandchildren[0].depth+1;
+
+		for (var i = 0; i < grandchildren.length; i++) {
+			d3.select("#topoNode_"+grandchildren[i].id+"_"+startingDepth).attr('fill','red');
+		}
+
+		//color the legend plate red too
+		$("#legendPlate_"+startingDepth).css("fill","red");		
+	}
+
+	function clearEquivalentTopoLinks() {
+		for (var i = 0; i < numNodes; i++) {
+			for (var k = 0; k<maxAncestors; k++) {
+				try {
+					var initialColor = d3.select("#topoNode_"+i+"_"+(k+1)).attr("initialColor");
+					d3.select("#topoNode_"+i+"_"+(k+1)).attr("fill",initialColor);
+				}
+				catch(e){
+					// do nothing
+				}
+			}
+		}
+
+		// clear legend plates
+		for (var i = 1; i <= maxAncestors; i++) {
+			$("#legendPlate_"+i).css("fill",colours(i));
+		}
+	}
+
+
+	//////-------------
+	// hover over topo links to highlight equivalent phylogenetic tree links
+	function highlightEquivalentPhyloLinks(link) {
+		// get the node element with the ID of link
+		var node;
+		for (var i = 0; i < nodesArray.length; i++) {
+			if (nodesArray[i].id == link) {
+				node = nodesArray[i];
+			}
+		}
+
+		// build an array of that node's children
+		var arrayOfChildren = [];
+		getChildren(node);
+		function getChildren(data) {
+			if (data.children) {
+				for (var i = 0; i < data.children.length; i++) {
+					arrayOfChildren.push(data.children[i]);
+					getChildren(data.children[i]);
+				}
+			}
+		}
+
+		// send that array to mouseOverPhyloLink
+		mouseOverPhyloLink(arrayOfChildren);
+	}
+
+
+	function clearEquivalentPhyloLinks() {
+		mouseOutPhyloLink();
+	}
+
+
+	function switchToRadialPhylogram() {
+		$("#phylogram").css("display","none");
+		$("#radialPhylogramButton").css("display", "none");
+		$("#radialPhylogram").css("display","block");
+		$("#treePhylogramButton").css("display","inline");
+	}
+
+	function switchToTreePhylogram() {
+		$("#radialPhylogram").css("display","none");
+		$("#treePhylogramButton").css("display","none");
+		$("#phylogram").css("display","block");
+		$("#radialPhylogramButton").css("display", "inline");
+
+	}
+
+	//// RESET TOPOGRAPHIC MAP BUTTON
+	function resetTopoMap() {
+		// Reset everything
+		if ( $('#topoMapContainer').hasClass('fullscreen') ) {
+	   		 $("#topographicMap").width("97%");
+	   		 chartWidth = $("#topographicMap").width();
+		     chartHeight = innerHeight - 165;
+		     $("#topographicMap").height(chartHeight);
+		} 
+		else {
+			chartWidth = $("#col1").width() - 50;
+	    	chartHeight = innerHeight - 270;
+		     $("#topographicMap").height(chartHeight);
+		}
+		
+		clearInterval(tick); 
+		$('#restartButton').hide(function(){$('#pauseButton').show();});
+
+		$("#topographicMap").html("");
+	    $("#topographicMap").width(chartWidth);
+	    $("#topographicMap").height(chartHeight);
+
+		buildTopographicMap(nodes);
+
+		// move tooltips away from view
+		$(".selectionMarker").hide();
+		$(".selectionMarker2").hide();
+		$(".d3-tip").hide();
+
+		$("#calculatingPositionsMessage").show();
+		turnOnSvgGoo();
+	}	
+
+	////////////////////////////////////////////////////
+	// SAVE SVG from: http://techslides.com/save-svg-as-an-image
+	// another good tutorial: https://spin.atomicobject.com/2014/01/21/convert-svg-to-png/
+	function saveImage(divID,format) {
+
+		  // now select the SVG image we wish to save (as determined by the parameter passed into this function)
+		  var html = d3.select(divID)
+		        .attr("version", 1.1)
+		        .attr("xmlns", "http://www.w3.org/2000/svg")
+		        .node().parentNode.innerHTML;
+
+
+		  // convert it to base64 or something(?)
+		 var imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(unescape(encodeURIComponent(html))); // not sure how this is different from the commented out version....?
+		 // var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+		 var img = '<img src="'+imgsrc+'">'; 
+
+		  // place it in a div (in the Save Image modal popup) as an img
+		  var svgData = d3.select("#svgdataurl").html(img);
+
+
+
+		  if (format == "png") {
+			  // select the canvas (in the Save Image modal popup)
+			  var canvas = document.querySelector("canvas");
+			  var context = canvas.getContext("2d");
+
+			  canvas.setAttribute('width', $("#topographicMap").width() );
+			  canvas.setAttribute('height',chartHeight)
+
+			  var h = canvas.getAttribute('height');
+			  var w = canvas.getAttribute('width');
+
+			  // make a background white rectangle
+			  context.fillStyle= "#ffffff"; // sets color
+			  context.fillRect(0,0,w,h); // sets top left location points x,y and then width and height
+
+		      // create a new image variable and fill it with the base64 image created above
+			  var image = new Image;
+			  image.src = imgsrc;
+
+			  // once image is built...
+			  image.onload = function() {
+			  	  // draw it to the canvas
+				  context.drawImage(image, 0, 0);
+
+				  // now store the contents of the canvas in png format
+				  var canvasdata = canvas.toDataURL("image/png");
+
+				  // console.log(canvasdata);
+
+				  // place the contents of the canvas (now in png format) in a div (in the Save Image modal popup)
+				  var pngimg = '<img src="'+canvasdata+'">'; 
+			  	  d3.select("#pngdataurl").html(pngimg);
+
+			  	  // finally create an "<a>" link that points to the canvas data and then automatically click on it to force a download -- SAVE PNG
+				  var a = document.createElement("a");
+				  var fileName = "Topo-phylogeny.png";
+				  if (divID == "#svgPhyloTree") { fileName = "PhylogeneticTree.png"; }
+				  else if (divID == "#svgRadialTree") { fileName = "RadialTree.png"; }
+				  a.download = fileName;
+				  a.href = canvasdata;
+				  a.click();
+			  
+			  }
+			}
+			else if (format == "svg") {
+				var fileName = "Topo-phylogeny.svg";
+				if (divID == "#svgPhyloTree") { fileName = "PhylogeneticTree.svg"; }
+				else if (divID == "#svgRadialTree") { fileName = "RadialTree.svg"; }
+				var svgData = $(divID)[0].outerHTML;
+				var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+				var svgUrl = URL.createObjectURL(svgBlob);
+				var downloadLink = document.createElement("a");
+				downloadLink.href = svgUrl;
+				downloadLink.download = fileName;
+				document.body.appendChild(downloadLink);
+				downloadLink.click();
+				document.body.removeChild(downloadLink);
+			}
+
+		//$('#saveImageModal').closeModal();
+	}
+
+
+	// fill select node dropdown menu options
+	function addSelectNodeDropdownMenuOptions() {
+
+		// create array of node names and id numbers
+		var options = [];
+		for (var i = 0; i < nodesArray.length; i++) {
+			if (nodesArray[i].name != "") {
+				options.push({"id":i, "name":nodesArray[i].name});
+			}
+		}
+
+		// sort function from: http://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value-in-javascript
+		function compare(a,b) {
+		  if (a.name < b.name)
+		    return -1;
+		  if (a.name > b.name)
+		    return 1;
+		  return 0;
+		}
+
+		// sort the list
+		options.sort(compare);
+
+		// loop through array and append options with value='id'to #topographicMapSelectNode
+		for (var i = 0; i < options.length; i++) {
+			$("#topographicMapSelectNode").append("<option value="+options[i].id+">"+options[i].name+"</option>")
+		}
+
+		// Attach an event trigger to it
+		$( "#topographicMapSelectNode" ).change(function() {
+			// if value isn't blank
+			// get value and store in a global
+			reactToSelectionClick($( "#topographicMapSelectNode" ).val());
+		});		
+
+	}
+
+	function reactToSelectionClick(input) {
+		// Reset everything
+		// hide the marker
+		$(".selectionMarker").hide();
+
+		// restore all the phylo and topo markers to black
+		for (var i = 0; i < nodesArray.length; i++) {
+			if (i != currentlySelected2TopoNode ) { 
+				d3.select("#phyloNode_"+i).select("circle").attr("r",4.5);
+				d3.select("#phyloNode_"+i).attr("fill","black");
+				d3.select("#phyloNode_"+i).style("font-weight","normal");
+
+				if (nodesArray[i].type == "leaf") {
+					d3.select("#topoLabelBG_"+i).attr("fill","black");
+					d3.select("#topoLabelBG_"+i).attr("stroke","black");	
+				}
+				else {
+					d3.select("#topoLabelBG_"+i).attr("fill","lightgrey");
+					d3.select("#topoLabelBG_"+i).attr("stroke","lightgrey");						
+				}
+				mouseOutNode(i);					
+			}
+		}
+
+
+		if ( input != "" && input != currentlySelectedTopoNode && input != currentlySelected2TopoNode) {
+			currentlySelectedTopoNode = input;
+
+			// set the dropdown menu to the selected item
+			$( "#topographicMapSelectNode" ).val(currentlySelectedTopoNode);		
+
+			if (nodesArray[currentlySelectedTopoNode].type == "leaf") {
+				document.getElementById('selectionMarkerText').textContent = nodesArray[currentlySelectedTopoNode].name;
+			}
+			else {
+				document.getElementById('selectionMarkerText').textContent = ("node:"+nodesArray[currentlySelectedTopoNode].id+" parent:"+nodesArray[currentlySelectedTopoNode].parent.id+" depth:"+nodesArray[currentlySelectedTopoNode].depth);
+			}
+
+			// get width of box according to width of text
+			$(".selectionMarker").show();
+			var textWidth = document.getElementById("selectionMarkerText").getBBox().width+20;
+			if (textWidth < 50) {
+				textWidth = 50;
+			}
+
+			$("#selectionMarkerBox").attr("width", textWidth);
+			$("#selectionMarkerBox").attr("x", -textWidth/2);
+
+			// make the node marker red
+			d3.select("#topoLabelBG_"+currentlySelectedTopoNode).attr("fill","red");
+			//d3.select("#topoLabelBG_"+currentlySelectedTopoNode).attr("stroke","red");
+
+			// highlight equivalent Phylo Nodes
+			d3.select("#phyloNode_"+currentlySelectedTopoNode).select("circle").attr("r",8);
+			d3.select("#phyloNode_"+currentlySelectedTopoNode).attr("fill","red");
+			d3.select("#phyloNode_"+currentlySelectedTopoNode).style("font-weight","bold");				
+		}
+		else {
+			//  reset currentlySelectedTopoNode
+			currentlySelectedTopoNode = 0;
+			$( "#topographicMapSelectNode" ).val("");			
+
+		}
+
+		moveTooltipsToFollowNodes();
+		mouseOutNode(input);
+	}
+
+
+
+	function reactToSelection2Click(input) {
+		// Reset everything
+		// hide the marker
+		$(".selectionMarker2").hide();
+
+		// restore all the phylo and topo markers to black
+		for (var i = 0; i < nodesArray.length; i++) {
+			if (i != currentlySelectedTopoNode ) {
+				d3.select("#phyloNode_"+i).select("circle").attr("r",4.5);
+				d3.select("#phyloNode_"+i).attr("fill","black");
+				d3.select("#phyloNode_"+i).style("font-weight","normal");
+
+				d3.select("#topoLabelBG_"+i).attr("fill","black");
+				d3.select("#topoLabelBG_"+i).attr("stroke","black");	
+
+				mouseOutNode(i);					
+			}
+		}
+
+		if ( input != "" && input != currentlySelected2TopoNode && input != currentlySelectedTopoNode) {
+			currentlySelected2TopoNode = input;
+
+			if (nodesArray[currentlySelected2TopoNode].type == "leaf") {
+				document.getElementById('selectionMarker2Text').textContent = nodesArray[currentlySelected2TopoNode].name;
+			}
+			else {
+				document.getElementById('selectionMarker2Text').textContent = ("node:"+nodesArray[currentlySelected2TopoNode].id+" parent:"+nodesArray[currentlySelected2TopoNode].parent.id+" depth:"+nodesArray[currentlySelected2TopoNode].depth);
+			}
+
+			// get width of box according to width of text
+			$(".selectionMarker2").show();
+			var textWidth = document.getElementById("selectionMarker2Text").getBBox().width+20;
+			//console.log(textWidth);
+			if (textWidth < 50) {
+				textWidth = 50;
+			}
+
+			$("#selectionMarker2Box").attr("width", textWidth);
+			$("#selectionMarker2Box").attr("x", -textWidth/2);
+
+			// make the node marker green
+			d3.select("#topoLabelBG_"+currentlySelected2TopoNode).attr("fill","#99CC00");
+
+			// highlight equivalent Phylo Nodes
+			d3.select("#phyloNode_"+currentlySelected2TopoNode).select("circle").attr("r",8);
+			d3.select("#phyloNode_"+currentlySelected2TopoNode).attr("fill","#99CC00");
+			d3.select("#phyloNode_"+currentlySelected2TopoNode).style("font-weight","bold");
+		}
+		else {
+			//  reset currentlySelectedTopoNode
+			currentlySelected2TopoNode = 0;
+		}
+
+		moveTooltipsToFollowNodes();
+		mouseOutNode(input);
+	}
+
+
+
+	////////////////////////////////
+	// Upload file
+	var selectedFile;
+	function uploadNewickFile() {
+		var fileSelector = document.createElement('input');
+		fileSelector.setAttribute('type', 'file');
+		fileSelector.setAttribute('id', 'fileSelector');
+                fileSelector.addEventListener("change", handleFiles, false);
+                fileSelector.click();
+	}
+        
+    function handleFiles() {
+      var fileList = this.files; /* now you can work with the file list */
+                    console.log("output", fileList);
+                    readSingleFile(fileList)
+    }
+
+    function readSingleFile(evt) {
+        //Retrieve the first (and only!) File from the FileList object
+        var f = evt[0]; 
+        console.log(f);
+
+        if (!f) {
+            alert("Failed to load file");
+        } else { 
+
+            var filename = f.name;
+            var ext = filename.split('.').pop();
+            
+            if(ext == "txt" || ext == "nwk"){
+                var r = new FileReader();
+                r.onload = function(e) { 
+                        var contents = e.target.result;
+                        parseNewick(contents);
+                }
+                 r.readAsText(f);
+            }else{
+                alert("Invalid file format. You can only upload .txt or .nwk files!");
+            }
+            
+        }
+    }
+
+	/////////////////////////////////
+
+	function makeTopomapFullScreen() {
+		$("#fullScreenButton").hide();
+		$("#regularViewButton").show();
+   		
+		$("#topographicMapSectionLabel").hide();
+
+   		$('#topoMapContainer').toggleClass('fullscreen'); 
+   		$('#topoMapContainer').toggleClass('z-depth-3'); 
+
+	    chartWidth = $("#col1").width() - 50;
+	    chartHeight = innerHeight - 165;
+
+	    $("#topographicMap").width("97%");
+	    chartWidth = $("#topographicMap").width() - 50;
+
+	    $("#topographicMap").height(chartHeight);
+	}
+
+	function makeTopomapRegularView() {
+		$("#regularViewButton").hide();
+		$("#fullScreenButton").show();
+
+		$("#topographicMapSectionLabel").show();
+
+
+   		$('#topoMapContainer').toggleClass('fullscreen'); 
+   		$('#topoMapContainer').toggleClass('z-depth-3'); 
+
+	    chartWidth = $("#col1").width() - 50;
+	    chartHeight = innerHeight - 270;
+
+	    $("#topographicMap").width(chartWidth);
+	    $("#topographicMap").height(chartHeight);
+	}
+
+	
+	function turnOffSvgGoo() {
+		for (var i = 0; i <= maxAncestors; i++) {
+			$("#gooey-"+i).css("display","none");
+		}
+		$('#turnOffGooButton').hide();$('#turnOnGooButton').show();
+	}
+	function turnOnSvgGoo() {
+		for (var i = 0; i <= maxAncestors; i++) {
+			$("#gooey-"+i).css("display","inherit");
+		}
+		$('#turnOnGooButton').hide();$('#turnOffGooButton').show();
+	}
+
+	
+
+
+
+	</script>
+
+</body>
+</html>
