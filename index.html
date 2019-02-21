@@ -124,7 +124,7 @@
 
       </style>
 </head>
-<body>
+<body background="images/a.jpg">
 
 	  <!-- Navigation Bar -->
 	  <nav class="grey darken-3" role="navigation">
@@ -134,14 +134,12 @@
 	        <li><a href="#aboutModal" class="modal-trigger">About</a></li>
 	        <li><a href="#optionsModal" class="modal-trigger">Options</a></li>
 	        <li><a href="#tipsModal" class="modal-trigger">Tips</a></li>
-	        <li><a href="#sourceCodeModal" class="modal-trigger">Source Code</a></li>
 	      </ul>
 
 	      <ul id="nav-mobile" class="side-nav">
 	        <li><a href="#aboutModal"  class="modal-trigger">About</a></li>
 	        <li><a href="#optionsModal" class="modal-trigger">Options</a></li>
 	        <li><a href="#tipsModal" class="modal-trigger">Tips</a></li>
-	        <li><a href="#sourceCodeModal" class="modal-trigger">Source Code</a></li>
 	      </ul>
 	    </div>
 	  </nav>
@@ -149,20 +147,21 @@
 
 	  	<!-- Welcome Page -->
 	    <div class="container" id="welcomePage">
-	      <h1 class="header center green-text">Visualize phylogenetic trees as topographic maps.</h1>
+	      <h1 class="header center green-text">Visualize phylogenetic tree </h1>
 	      <div class="row center">
-	        <h5 class="header col s12 light">Paste a <a href="https://en.wikipedia.org/wiki/Newick_format" target="_blank">Newick</a> file here:</h5>
+	        <h5 class="header col s12 light">Paste the Data set </a>link URL here:</h5>
 	      </div>
 
 		  <!-- Text Input Box -->
 	      <div class="input-field col s12">
 	        <textarea id="newickInputBox" class="materialize-textarea"></textarea>
-	        <label for="newickInputBox">Newick format: (A:0.1,B:0.2,(C:0.3,D:0.4):0.5);</label>
+	        <label for="newickInputBox">url of the data set;</label>
 	      </div>
 		  
 		  <!-- Example Buttons -->
 		  <div class="row center">
 		    <div class="col s12">
+					<h5 class="header col s12 light">Try using tree size of examples:</h5>
 			  <a class="waves-effect waves-teal btn-flat" onclick="parseNewick('(A:0.1,B:0.2,(C:0.3,D:0.4):0.5);');">Small Example</a>
 			  <a class="waves-effect waves-teal btn-flat" onclick="parseNewick('(((((((PgyBR1:0.00000000,PgyUnB647:0.00000000):0.00200757,(PphNPS3121:0.00249128,Pph1448A:0.00000777):0.00200742):0.01011522,Pla107:0.01575971):0.00210573,PmpFTRS_U7:0.01531036):0.01407924,(PsCit7:0.01991495,(PpiR6a:0.01460829,PsyB728Aa:0.01029085):0.00987315):0.00999897):0.01106542,(PorI_6:0.00661882,Por36_1:0.00498403):0.04567256):0.00045234,((Pci0788_9:0.01761425,PmaES4326:0.01835073):0.02736604,(PavBPIC631:0.01291588,(PmaAZ85297:0.00624748,PtoDC3000a:0.00127089):0.00795115):0.03008747):0.00702695);');">Medium Example</a>
 			  <a class="waves-effect waves-teal btn-flat" onclick="parseNewick('((((((((((((((PpiH5E3:0.00000000,PpiPP1:0.00000000):0.00252001,PjaM301072:0.00250147):0.00175506,PsyFTRS_W7:0.00478703):0.00136880,((PsyL177:0.00094777,PsyLOB2_1:0.00155361):0.00125163,(PsyNCPPB28:0.00157612,Ptt601:0.00142503):0.00025659):0.00306145):0.00117244,(PafDSM5025:0.00253646,PsyB64:0.00046616):0.00535781):0.00108752,(PttDSM5022:0.00216384,(Pla1188_1:0.00350490,PsyFF5:0.00202032):0.00085104):0.00434776):0.00121404,PsyPSC1B:0.00695052):0.00418387,(((Pph1449B:0.00052915,PpiH5E1:0.00000000):0.00015648,PpiH6E5:0.00034330):0.00009728,(PpiH7E7:0.00224179,(Ppi895A:0.00104197,PpiR6a:0.00000000):0.00025970):0.00040414):0.01040471):0.00229716,(PsyB728A:0.00346345,(PacA10853:0.00573777,PsyB48:0.00382224):0.00232490):0.00707697):0.00306205,PsTLP2:0.01391976):0.01140230,(PbrKOZ8101:0.00489171,(((PsyB76:0.00133766,PsyFTRS_W6:0.00216550):0.00064305,PttG733:0.00287428):0.00053771,(Pto2170:0.00214782,((PsCit7:0.00110098,Psy61:0.00190137):0.00016567,(Psy1212R:0.00090776,PsyA2:0.00059189):0.00033488):0.00035829):0.00119777):0.00835688):0.01295012):0.00696647,(PseHC_1:0.01350894,((((PmyAZ84488:0.00157905,PmyM302941:0.00394590):0.01041164,PmpFTRS_U7:0.00558250):0.00235982,Pae0893_23:0.00268274):0.00688288,(((((PlaYM7902:0.00000000,PlaYM8003:0.00000000):0.00000000,PlaN7512:0.00000000):0.00006054,Pla107:0.00043889):0.01178224,Pta6606:0.00341261):0.00384490,(PmeN6801:0.00634047,(Psv4352:0.01007126,(PmoM301020:0.00677841,((((((((PgyKN127:0.00024967,PgyM301765:0.00024966):0.00025011,PgyMOC601:0.00049978):0.00000000,(PgyKN166:0.00000000,PgyKN44:0.00150139):0.00000065):0.00000004,(PgyBR1:0.00000000,PgyLN10:0.00150056):0.00000051):0.00000128,PgyKN28:0.00000000):0.00000181,PgyR4a:0.00000000):0.00000310,PgyUnB647:0.00000000):0.00282068,(PphHB10Y:0.00048952,(PphKN86:0.00049597,(((Pph1302A:0.00300675,PphSG44:0.00000000):0.00000042,PphR6a:0.00000000):0.00050108,(Pph1448A:0.00000000,(PphNPS3121:0.00250491,(PphNS368:0.00000000,(PmaKN91:0.00200864,PphY5_2:0.00000000):0.00000430):0.00000088):0.00000123):0.00000173):0.00000362):0.00000964):0.00119222):0.00581542):0.00025263):0.00076519):0.00283499):0.00194067):0.00373467):0.01045826):0.01147017,(PsyPs9220:0.00405211,(Pcn3113:0.00474346,(Por36_1:0.00465723,(PcnKN221:0.00077548,PorI_6:0.00475446):0.00139768):0.00182070):0.00148520):0.04254466):0.00126574,((((PmaM4:0.00052970,PmaYM7930:0.00046966):0.00028499,PmaES4326:0.00021460):0.01763003,Pci0788_9:0.01841336):0.02710447,(((PanFTRS_L1:0.00172820,PthK93001:0.00429172):0.00465630,Pmp19322:0.01108162):0.00505493,((PtoDC3000:0.00111504,PtoKN10:0.00088469):0.00112282,(Pap1089_5:0.00604028,((((((PtoDCT6D1:0.00045759,PtoTF1:0.00104249):0.00002442,PtoDC89_4H:0.00097649):0.00046287,Pto1318:0.00003607):0.00026407,Pto487:0.00073643):0.00124927,(PtoDC84_1:0.00000000,PtoPT23:0.00054641):0.00175799):0.00153690,(PmaM6:0.00269314,((PlaA7386:0.00280650,PmaKN84:0.00271566):0.00146598,(Pma4981:0.00000000,(PmaAZ85297:0.00000000,(PmaH7311:0.00000000,(PmaH7608:0.00054723,PmaKN203:0.00000000):0.00002418):0.00001223):0.00000619):0.00255075):0.00107481):0.00096809):0.00178078):0.00097707):0.00922906):0.02843149):0.00653465);');">Large Example</a>
